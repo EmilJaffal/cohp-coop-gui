@@ -25,7 +25,7 @@ The **COHP/COOP GUI Plotter** is a Python-based web application for interactive 
 
 The app is live on Heroku:
 
-🔗 [Open the COHP/COOP GUI Plotter](https://doscar-gui-9a48cc5d4e0d.herokuapp.com)
+🔗 [Open the COHP/COOP GUI Plotter](https://cohp-coop-gui-1de5a0643ceb.herokuapp.com)
 
 ---
 
@@ -139,5 +139,29 @@ MIT License. See LICENSE for details.
 For questions or collaborations, open an issue or contact via GitHub:
 
 👉 [EmilJaffal/cohp-coop-gui](https://github.com/emiljaffal/cohp-coop-gui)
+
+---
+
+## File Formats
+
+### COHPCAR.lobster
+
+- Contains the projected COHPs (pCOHPs) as requested in the `lobsterin` file.
+- Format resembles TB-LMTO-ASA’s COPL file:
+  - **Starting from line 3:** Labels for the interactions, followed by the actual data.
+  - **Column 1:** Energy axis (Fermi level shifted to 0 eV).
+  - **Column 2:** pCOHP averaged over all atom pairs specified.
+  - **Column 3:** Integrated pCOHP (IpCOHP) averaged over all atom pairs.
+  - **Column 4:** pCOHP of the first interaction.
+  - **Column 5:** IpCOHP of the first interaction.
+  - ...and so on for additional interactions.
+- **Spin-polarized calculations:**  
+  - The first set of columns (2, 3, …, 2N+3) is for the first (up) spin.
+  - The next set (2N+4, 2N+5, …, 4N+5) is for the second (down) spin.  
+  - Here, N is the number of interactions.
+
+### COOPCAR.lobster
+
+- Same format as `COHPCAR.lobster`, but for projected COOP (pCOOP) and its integral (IpCOOP).
 
 ---
