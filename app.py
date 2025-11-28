@@ -13,8 +13,8 @@ import plotly.graph_objects as go
 import plotly.io as pio
 
 pio.kaleido.scope.default_format = "png"
-pio.kaleido.scope.default_width = 1200
-pio.kaleido.scope.default_height = 800
+pio.kaleido.scope.default_width = 400
+pio.kaleido.scope.default_height = 725
 pio.kaleido.scope.default_scale = 2
 
 DEFAULTS = {
@@ -23,6 +23,7 @@ DEFAULTS = {
     "ymin": -8,
     "ymax": 2,
     "legend_y": 0.26,
+    "legend_x": 0.95,
 }
 
 DEMO_FILE = "CeCoAl4.zip"
@@ -82,8 +83,8 @@ app.layout = html.Div([
         html.Div([
             html.Div(id='cohp-warning'),
             dcc.Graph(id='cohp-plot', style={
-                "height": "950px",
-                "width": "575px",
+                "height": "725px",
+                "width": "400px",
                 "backgroundColor": "#fff",
                 "borderRadius": "10px",
                 "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.08)"
@@ -92,8 +93,8 @@ app.layout = html.Div([
         html.Div([
             html.Div(id='coop-warning'),
             dcc.Graph(id='coop-plot', style={
-                "height": "950px",
-                "width": "575px",
+                "height": "725px",
+                "width": "400px",
                 "backgroundColor": "#fff",
                 "borderRadius": "10px",
                 "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.08)"
@@ -128,6 +129,22 @@ app.layout = html.Div([
                 dcc.Input(id='ymax-cohp', type='number', value=DEFAULTS["ymax"], style={
                     "padding": "8px", "borderRadius": "5px", "border": "1px solid #ccc",
                     "width": "40px"
+                }),
+            ], style={"marginBottom": "15px"}),
+
+            html.Div([
+                html.Label("Legend Y-position:", style={"fontWeight": "bold", "fontFamily": "DejaVu Sans, Arial, sans-serif", "marginBottom": "5px"}),
+                dcc.Input(id='legend-y-cohp', type='number', min=0, max=1, step=0.01, value=DEFAULTS["legend_y"], style={
+                    "width": "80px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ccc",
+                    "fontFamily": "DejaVu Sans, Arial, sans-serif"
+                }),
+            ], style={"marginBottom": "15px"}),
+
+            html.Div([
+                html.Label("Legend X-position:", style={"fontWeight": "bold", "fontFamily": "DejaVu Sans, Arial, sans-serif", "marginBottom": "5px"}),
+                dcc.Input(id='legend-x-cohp', type='number', min=0, max=1, step=0.01, value=DEFAULTS["legend_x"], style={
+                    "width": "80px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ccc",
+                    "fontFamily": "DejaVu Sans, Arial, sans-serif"
                 }),
             ], style={"marginBottom": "15px"}),
 
@@ -189,6 +206,22 @@ app.layout = html.Div([
             ], style={"marginBottom": "15px"}),
 
             html.Div([
+                html.Label("Legend Y-position:", style={"fontWeight": "bold", "fontFamily": "DejaVu Sans, Arial, sans-serif", "marginBottom": "5px"}),
+                dcc.Input(id='legend-y-coop', type='number', min=0, max=1, step=0.01, value=DEFAULTS["legend_y"], style={
+                    "width": "80px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ccc",
+                    "fontFamily": "DejaVu Sans, Arial, sans-serif"
+                }),
+            ], style={"marginBottom": "15px"}),
+
+            html.Div([
+                html.Label("Legend X-position:", style={"fontWeight": "bold", "fontFamily": "DejaVu Sans, Arial, sans-serif", "marginBottom": "5px"}),
+                dcc.Input(id='legend-x-coop', type='number', min=0, max=1, step=0.01, value=DEFAULTS["legend_x"], style={
+                    "width": "80px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ccc",
+                    "fontFamily": "DejaVu Sans, Arial, sans-serif"
+                }),
+            ], style={"marginBottom": "15px"}),
+
+            html.Div([
                 dcc.Checklist(
                     id='show-titles-coop',
                     options=[
@@ -218,8 +251,8 @@ app.layout = html.Div([
         ], style={
             "flex": "3",
             "minWidth": "250px",
-            "maxWidth": "300px",
-            "height": "550px",
+            "maxWidth": "400px",
+            "height": "650px",
             "backgroundColor": "#fff",
             "borderRadius": "10px",
             "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
@@ -239,7 +272,7 @@ app.layout = html.Div([
                 "flex": "3",
                 "minWidth": "300px",
                 "maxWidth": "400px",
-                "height": "550px",
+                "height": "650px",
                 "backgroundColor": "#fff",
                 "borderRadius": "10px",
                 "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
@@ -427,11 +460,13 @@ def get_dynamic_xrange(energy, y_min, y_max, traces):
     Input({'type': 'toggle-icohp', 'index': ALL}, 'value'),
     Input('xmin-cohp', 'value'), Input('xmax-cohp', 'value'),
     Input('ymin-cohp', 'value'), Input('ymax-cohp', 'value'),
+    Input('legend-y-cohp', 'value'),
+    Input('legend-x-cohp', 'value'),
     Input('show-titles-cohp', 'value'),
     Input('show-axis-scale-cohp', 'value'),
     prevent_initial_call=True
 )
-def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, show_titles, show_axis_scale):    
+def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, legend_y, legend_x, show_titles, show_axis_scale):    
     if not data or "cohp_data" not in data:
         return go.Figure()
     pairs = [f"{p[0]}-{p[1]}" for p in data["unique_pairs"]]
@@ -492,7 +527,7 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
             x=pcohp_sum, y=energy,
             mode='lines',
             name=pair_str,
-            line=dict(width=4, color=color_map.get(pair_str, 'blue'))
+            line=dict(width=2.25, color=color_map.get(pair_str, 'blue'))
         ))
         # ICOHP dashed line if toggled
         if icohp_map.get(pair_str, False):
@@ -500,25 +535,22 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
                 x=icohp_sum, y=energy,
                 mode='lines',
                 name=f"ICOHP",
-                line=dict(width=4, color=color_map.get(pair_str, 'blue'), dash='dash'),
+                line=dict(width=2.25, color=color_map.get(pair_str, 'blue'), dash='dash'),
                 showlegend=True
             ))
-    fig.update_layout(
-        xaxis=dict(title="-COHP", range=[xmin_val, xmax_val], tickfont=dict(size=22)),
-        yaxis=dict(title="Energy (eV)", range=[ymin_val, ymax_val], tickfont=dict(size=22)),
-        legend=dict(font=dict(size=18)),
-        margin=dict(l=80, r=80, t=80, b=80),
-        height=1000,
-        title=dict(text=f"{data.get('folder_name', '')} COHP", font=dict(size=22)),
-    )
-    fig.add_hline(y=0, line_dash="dash", line_color="black", line_width=3)
-    fig.add_vline(x=0, line_dash="dash", line_color="black", line_width=3)
+    fig.add_hline(y=0, line_dash="dash", line_color="black", line_width=2)
+    fig.add_vline(x=0, line_dash="dash", line_color="black", line_width=2)
 
     # --- Layout and annotation for the graph ---
     # Set defaults if not provided
     #show_titles = ['plot_title', 'x_title', 'y_title']
     #show_axis_scale = ['x_scale', 'y_scale']
-    legend_y = data.get('legend_y', 0.26) if isinstance(data, dict) else 0.26
+    # Use legend_y from callback parameter, with fallback to default
+    if legend_y is None:
+        legend_y = DEFAULTS["legend_y"]
+    # Use legend_x from callback parameter, with fallback to default
+    if legend_x is None:
+        legend_x = DEFAULTS["legend_x"]
     folder_name_unicode = data.get('folder_name', '') if isinstance(data, dict) else ''
 
     # --- Title formatting ---
@@ -537,28 +569,28 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
 
     # --- Layout ---
     fig.update_layout(
-        font=dict(family="DejaVu Sans, Arial, sans-serif", size=30, color='black'),
+        font=dict(family="DejaVu Sans, Arial, sans-serif", size=22, color='black'),
         title=dict(
             text=plot_title,
             x=0.5,
             xanchor='center',
-            y=0.99,
-            font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            pad=dict(t=20)
+            y=0.98,
+            font=dict(size=22, family="DejaVu Sans, Arial, sans-serif")
         ) if plot_title else None,
         xaxis=dict(
             title=dict(
                 text=x_title,
-                font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
+                font=dict(size=22, family="DejaVu Sans, Arial, sans-serif"),
             ),
             range=[xmin_val, xmax_val],
             showgrid=False,
             zeroline=True,
             zerolinewidth=3,
             zerolinecolor='black',
-            tickfont=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            tickwidth=3,
-            ticklen=10,
+            tickfont=dict(size=20, family="DejaVu Sans, Arial, sans-serif"),
+            tickwidth=2,
+            ticklen=8,
+            tickcolor='black',
             ticks='outside' if show_x_scale else '',
             automargin=True,
             showticklabels=show_x_scale
@@ -566,36 +598,29 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
         yaxis=dict(
             title=dict(
                 text=y_title,
-                font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
+                font=dict(size=22, family="DejaVu Sans, Arial, sans-serif"),
             ),
             range=[ymin_val, ymax_val],
             showgrid=False,
             zeroline=False,
-            tickfont=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            tickwidth=3,
-            ticklen=10,
+            tickfont=dict(size=20, family="DejaVu Sans, Arial, sans-serif"),
+            tickwidth=2,
+            ticklen=8,
+            tickcolor='black',
             ticks='outside' if show_y_scale else '',
             showticklabels=show_y_scale
         ),
         legend=dict(
-            font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            borderwidth=0,
-            orientation="v",
-            x=0.01,
-            y=0.01,
-            xanchor='left',
-            yanchor='bottom',
-            itemwidth=30,
-            itemsizing='constant',
-            bgcolor='rgba(0,0,0,0)',
-            bordercolor='rgba(0,0,0,0)',
-            traceorder="normal"
+            x=legend_x,
+            y=legend_y,
+            xanchor='right',
+            yanchor='top'
         ),
         plot_bgcolor='white',
         paper_bgcolor='white',
-        margin=dict(l=80, r=100, t=70, b=60),
-        height=925,
-        width=575,
+        margin=dict(l=50, r=50, t=50, b=50),
+        height=725,
+        width=400,
     )
 
     # --- Fermi level annotation ---
@@ -604,10 +629,10 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
         y=0,
         text="<i>E</i><sub><i>F</i></sub>",
         showarrow=False,
-        font=dict(size=30, family="DejaVu Sans, Arial, sans-serif", color="black"),
+        font=dict(size=20, family="DejaVu Sans, Arial, sans-serif", color="black"),
         xanchor="left",
         yanchor="middle",
-        xshift=10,
+        xshift=2,
         yshift=0,
         align="left"
     )
@@ -617,12 +642,11 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
         type="rect",
         x0=0, y0=0, x1=1, y1=1,
         xref="paper", yref="paper",
-        line=dict(color="black", width=3),
+        line=dict(color="black", width=2),
         fillcolor='rgba(0,0,0,0)'
     )
 
     # --- Optional: Add Fermi level line ---
-    fig.add_hline(y=0, line_dash="dash", line_color="black", line_width=3)
 
     return fig
 
@@ -638,24 +662,10 @@ def update_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, sh
 def save_plot(n_clicks, figure, folder_name):
     if n_clicks:
         fig = pio.from_json(pio.to_json(figure))
-        # --- Ensure white background and consistent legend for saved plot ---
+        # --- Ensure white background for saved plot ---
         fig.update_layout(
             plot_bgcolor='white',
-            paper_bgcolor='white',
-            legend=dict(
-                font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-                borderwidth=0,
-                orientation="v",
-                x=0.01,
-                y=0.01,
-                xanchor='left',
-                yanchor='bottom',
-                itemwidth=30,
-                itemsizing='constant',
-                bgcolor='rgba(0,0,0,0)',
-                bordercolor='rgba(0,0,0,0)',
-                traceorder="normal"
-            ),
+            paper_bgcolor='white'
         )
         filename = f"{folder_name}_COHP_plot.png"
         def write_image_to_bytesio(output_buffer):
@@ -677,23 +687,10 @@ def save_plot(n_clicks, figure, folder_name):
 def save_coop_plot(n_clicks, figure, folder_name):
     if n_clicks:
         fig = pio.from_json(pio.to_json(figure))
+        # --- Ensure white background for saved plot ---
         fig.update_layout(
             plot_bgcolor='white',
-            paper_bgcolor='white',
-            legend=dict(
-                font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-                borderwidth=0,
-                orientation="v",
-                x=0.01,
-                y=0.01,
-                xanchor='left',
-                yanchor='bottom',
-                itemwidth=30,
-                itemsizing='constant',
-                bgcolor='rgba(0,0,0,0)',
-                bordercolor='rgba(0,0,0,0)',
-                traceorder="normal"
-            ),
+            paper_bgcolor='white'
         )
         filename = f"{folder_name}_COOP_plot.png"
         def write_image_to_bytesio(output_buffer):
@@ -733,11 +730,13 @@ def reset_axes(n_clicks):
     Input({'type': 'toggle-icohp', 'index': ALL}, 'value'),
     Input('xmin-coop', 'value'), Input('xmax-coop', 'value'),
     Input('ymin-coop', 'value'), Input('ymax-coop', 'value'),
+    Input('legend-y-coop', 'value'),
+    Input('legend-x-coop', 'value'),
     Input('show-titles-coop', 'value'),
     Input('show-axis-scale-coop', 'value'),
     prevent_initial_call=True
 )
-def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, show_titles, show_axis_scale):
+def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, ymax, legend_y, legend_x, show_titles, show_axis_scale):
     if not data or "coop_data" not in data or not data["coop_data"]:
         return go.Figure()
     pairs = [f"{p[0]}-{p[1]}" for p in data["unique_pairs"]]
@@ -798,7 +797,7 @@ def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, yma
             x=pcoop_sum, y=energy,
             mode='lines',
             name=pair_str,
-            line=dict(width=4, color=color_map.get(pair_str, 'blue'))
+            line=dict(width=2.25, color=color_map.get(pair_str, 'blue'))
         ))
         # ICOHP dashed line if toggled
         if icohp_map.get(pair_str, False):
@@ -806,22 +805,19 @@ def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, yma
                 x=icoop_sum, y=energy,
                 mode='lines',
                 name=f"ICOOP",
-                line=dict(width=4, color=color_map.get(pair_str, 'blue'), dash='dash'),
+                line=dict(width=2.25, color=color_map.get(pair_str, 'blue'), dash='dash'),
                 showlegend=True
             ))
-    fig.update_layout(
-        xaxis=dict(title="COOP", range=[xmin_val, xmax_val], tickfont=dict(size=22)),
-        yaxis=dict(title="Energy (eV)", range=[ymin_val, ymax_val], tickfont=dict(size=22)),
-        legend=dict(font=dict(size=18)),
-        margin=dict(l=80, r=80, t=80, b=80),
-        height=1000,
-        title=dict(text=f"{data.get('folder_name', '')} COOP", font=dict(size=22)),
-    )
-    fig.add_hline(y=0, line_dash="dash", line_color="black", line_width=3)
-    fig.add_vline(x=0, line_dash="dash", line_color="black", line_width=3)
+    fig.add_hline(y=0, line_dash="dash", line_color="black", line_width=2)
+    fig.add_vline(x=0, line_dash="dash", line_color="black", line_width=2)
 
     # --- Layout and annotation for the graph ---
-    legend_y = data.get('legend_y', 0.26) if isinstance(data, dict) else 0.26
+    # Use legend_y from callback parameter, with fallback to default
+    if legend_y is None:
+        legend_y = DEFAULTS["legend_y"]
+    # Use legend_x from callback parameter, with fallback to default
+    if legend_x is None:
+        legend_x = DEFAULTS["legend_x"]
     folder_name_unicode = data.get('folder_name', '') if isinstance(data, dict) else ''
 
     # --- Title formatting ---
@@ -840,28 +836,28 @@ def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, yma
 
     # --- Layout ---
     fig.update_layout(
-        font=dict(family="DejaVu Sans, Arial, sans-serif", size=30, color='black'),
+        font=dict(family="DejaVu Sans, Arial, sans-serif", size=22, color='black'),
         title=dict(
             text=plot_title,
             x=0.5,
             xanchor='center',
-            y=0.99,
-            font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            pad=dict(t=20)
+            y=0.98,
+            font=dict(size=22, family="DejaVu Sans, Arial, sans-serif")
         ) if plot_title else None,
         xaxis=dict(
             title=dict(
                 text=x_title,
-                font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
+                font=dict(size=22, family="DejaVu Sans, Arial, sans-serif"),
             ),
             range=[xmin_val, xmax_val],
             showgrid=False,
             zeroline=True,
             zerolinewidth=3,
             zerolinecolor='black',
-            tickfont=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            tickwidth=3,
-            ticklen=10,
+            tickfont=dict(size=20, family="DejaVu Sans, Arial, sans-serif"),
+            tickwidth=2,
+            ticklen=8,
+            tickcolor='black',
             ticks='outside' if show_x_scale else '',
             automargin=True,
             showticklabels=show_x_scale
@@ -869,36 +865,29 @@ def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, yma
         yaxis=dict(
             title=dict(
                 text=y_title,
-                font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
+                font=dict(size=22, family="DejaVu Sans, Arial, sans-serif"),
             ),
             range=[ymin_val, ymax_val],
             showgrid=False,
             zeroline=False,
-            tickfont=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            tickwidth=3,
-            ticklen=10,
+            tickfont=dict(size=20, family="DejaVu Sans, Arial, sans-serif"),
+            tickwidth=2,
+            ticklen=8,
+            tickcolor='black',
             ticks='outside' if show_y_scale else '',
             showticklabels=show_y_scale
         ),
         legend=dict(
-            font=dict(size=30, family="DejaVu Sans, Arial, sans-serif"),
-            borderwidth=0,
-            orientation="v",
-            x=0.01,
-            y=0.01,
-            xanchor='left',
-            yanchor='bottom',
-            itemwidth=30,
-            itemsizing='constant',
-            bgcolor='rgba(0,0,0,0)',
-            bordercolor='rgba(0,0,0,0)',
-            traceorder="normal"
+            x=legend_x,
+            y=legend_y,
+            xanchor='right',
+            yanchor='top'
         ),
         plot_bgcolor='white',
         paper_bgcolor='white',
-        margin=dict(l=80, r=100, t=70, b=60),
-        height=925,
-        width=575,
+        margin=dict(l=50, r=50, t=50, b=50),
+        height=725,
+        width=400,
     )
 
     # --- Fermi level annotation ---
@@ -907,10 +896,10 @@ def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, yma
         y=0,
         text="<i>E</i><sub><i>F</i></sub>",
         showarrow=False,
-        font=dict(size=30, family="DejaVu Sans, Arial, sans-serif", color="black"),
+        font=dict(size=20, family="DejaVu Sans, Arial, sans-serif", color="black"),
         xanchor="left",
         yanchor="middle",
-        xshift=10,
+        xshift=2,
         yshift=0,
         align="left"
     )
@@ -920,12 +909,11 @@ def update_coop_plot(data, colors, toggles, icohp_toggles, xmin, xmax, ymin, yma
         type="rect",
         x0=0, y0=0, x1=1, y1=1,
         xref="paper", yref="paper",
-        line=dict(color="black", width=3),
+        line=dict(color="black", width=2),
         fillcolor='rgba(0,0,0,0)'
     )
 
     # --- Optional: Add Fermi level line ---
-    fig.add_hline(y=0, line_dash="dash", line_color="black", line_width=3)
 
     return fig
 
